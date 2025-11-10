@@ -11,7 +11,6 @@ import cv2
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import torch
 import yaml
 from PIL import Image, ImageDraw, ImageFont
@@ -269,6 +268,9 @@ def plot_study_txt(path='', x=None):  # from utils.plots import *; plot_study_tx
 
 
 def plot_labels(labels, names=(), save_dir=Path(''), loggers=None):
+    import pandas as pd
+    import seaborn as sns
+
     # plot dataset labels
     print('Plotting labels... ')
     c, b = labels[:, 0], labels[:, 1:].transpose()  # classes, boxes
@@ -276,14 +278,10 @@ def plot_labels(labels, names=(), save_dir=Path(''), loggers=None):
     colors = color_list()
     x = pd.DataFrame(b.transpose(), columns=['x', 'y', 'width', 'height'])
 
-    try:
-        import seaborn as sns
-        # seaborn correlogram
-        sns.pairplot(x, corner=True, diag_kind='auto', kind='hist', diag_kws=dict(bins=50), plot_kws=dict(pmax=0.9))
-        plt.savefig(save_dir / 'labels_correlogram.jpg', dpi=200)
-        plt.close()
-    except ImportError:
-        print('Warning: seaborn not installed, skipping correlogram plot')
+    # seaborn correlogram
+    sns.pairplot(x, corner=True, diag_kind='auto', kind='hist', diag_kws=dict(bins=50), plot_kws=dict(pmax=0.9))
+    plt.savefig(save_dir / 'labels_correlogram.jpg', dpi=200)
+    plt.close()
 
     # matplotlib labels
     matplotlib.use('svg')  # faster
@@ -295,13 +293,9 @@ def plot_labels(labels, names=(), save_dir=Path(''), loggers=None):
         ax[0].set_xticklabels(names, rotation=90, fontsize=10)
     else:
         ax[0].set_xlabel('classes')
-    try:
-        import seaborn as sns
-        sns.histplot(x, x='x', y='y', ax=ax[2], bins=50, pmax=0.9)
-        sns.histplot(x, x='width', y='height', ax=ax[3], bins=50, pmax=0.9)
-    except ImportError:
-        ax[2].hist2d(x['x'], x['y'], bins=50)
-        ax[3].hist2d(x['width'], x['height'], bins=50)
+
+    sns.histplot(x, x='x', y='y', ax=ax[2], bins=50, pmax=0.9)
+    sns.histplot(x, x='width', y='height', ax=ax[3], bins=50, pmax=0.9)
 
     # rectangles
     labels[:, 1:3] = 0.5  # center

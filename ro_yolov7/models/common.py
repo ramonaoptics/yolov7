@@ -3,7 +3,6 @@ from copy import copy
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 import requests
 import torch
 import torch.nn as nn
@@ -991,6 +990,8 @@ class Detections:
         return self.imgs
 
     def pandas(self):
+        import pandas as pd
+
         # return detections as pandas DataFrames, i.e. print(results.pandas().xyxy[0])
         new = copy(self)  # return copy
         ca = 'xmin', 'ymin', 'xmax', 'ymax', 'confidence', 'class', 'name'  # xyxy columns

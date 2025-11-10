@@ -15,7 +15,6 @@ requirements = [
     "torch",
     "torchvision",
     "tqdm",
-    "pandas",
 ]
 
 setup(
