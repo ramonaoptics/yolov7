@@ -61,65 +61,6 @@ def ml_dataset():
     shutil.rmtree(temp_dir, ignore_errors=True)
 
 
-def test_train_one_epoch(ml_dataset):
-    dataset_dir = ml_dataset
-    data_yaml = dataset_dir / 'data.yaml'
-    cfg_yaml = Path(ro_yolov7.__file__).parent / 'cfg' / 'training' / 'yolov7-tiny.yaml'
-    hyp_yaml = Path(ro_yolov7.__file__).parent / 'data' / 'hyp.scratch.tiny.yaml'
-    default_weights_path = Path(ro_yolov7.__file__).parent / 'yolov7-tiny.pt'
-
-    # Setup training options
-    opt = argparse.Namespace(
-        weights=str(default_weights_path),
-        cfg=str(cfg_yaml),
-        data=str(data_yaml),
-        hyp=str(hyp_yaml),
-        epochs=1,
-        batch_size=1,
-        total_batch_size=1,
-        img_size=[640, 640],
-        rect=False,
-        resume=False,
-        nosave=True,  # Don't save checkpoints
-        notest=False,
-        noautoanchor=True,  # Skip autoanchor check
-        evolve=False,
-        bucket='',
-        cache_images=False,
-        image_weights=False,
-        device='cpu',  # Use CPU for testing
-        multi_scale=False,
-        single_cls=True,
-        adam=False,
-        sync_bn=False,
-        workers=0,  # No multiprocessing for testing
-        project=str(dataset_dir / 'runs'),
-        entity=None,
-        name='test',
-        exist_ok=True,
-        quad=False,
-        linear_lr=False,
-        label_smoothing=0.0,
-        upload_dataset=False,
-        bbox_interval=-1,
-        save_period=-1,
-        artifact_alias='latest',
-        freeze=[0],
-        v5_metric=False,
-        global_rank=-1,
-        local_rank=-1,
-        world_size=1,
-        save_dir=str(dataset_dir / 'runs' / 'test')
-    )
-
-    with open(hyp_yaml) as f:
-        hyp = yaml.load(f, Loader=yaml.SafeLoader)
-
-    device = select_device(opt.device, batch_size=opt.batch_size)
-    results = train(hyp, opt, device, tb_writer=None)
-    assert results is not None, "Training should return results"
-
-
 def test_training_from_subprocess(ml_dataset):
     dataset_dir = ml_dataset
     data_yaml = dataset_dir / 'data.yaml'
@@ -158,4 +99,4 @@ def test_training_from_subprocess(ml_dataset):
 
     last_pt = weights_dir / 'last.pt'
     best_pt = weights_dir / 'best.pt'
-    assert last_pt.exists() or best_pt.exists(), "No model weights were saved"
+    assert last_pt.exists() and best_pt.exists(), "Model weights were not saved correctly"
