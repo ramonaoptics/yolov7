@@ -11,19 +11,21 @@ import cv2
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-import seaborn as sns
 import torch
 import yaml
 from PIL import Image, ImageDraw, ImageFont
 from scipy.signal import butter, filtfilt
 
-from utils.general import xywh2xyxy, xyxy2xywh
-from utils.metrics import fitness
+from .general import xywh2xyxy, xyxy2xywh
+from .metrics import fitness
 
 # Settings
-matplotlib.rc('font', **{'size': 11})
-matplotlib.use('Agg')  # for writing to files only
+# There are a few usages of matplotlib.rc and matplotlib.use in the code
+# I commented out for them not to interfere with software written outside this package
+# but they may need to be rethought for certain use-cases
+# Mark -- 2025/11/10
+# matplotlib.rc('font', **{'size': 11})
+# matplotlib.use('Agg')  # for writing to files only
 
 
 def color_list():
@@ -270,6 +272,9 @@ def plot_study_txt(path='', x=None):  # from utils.plots import *; plot_study_tx
 
 
 def plot_labels(labels, names=(), save_dir=Path(''), loggers=None):
+    import pandas as pd
+    import seaborn as sns
+
     # plot dataset labels
     print('Plotting labels... ')
     c, b = labels[:, 0], labels[:, 1:].transpose()  # classes, boxes
@@ -283,7 +288,7 @@ def plot_labels(labels, names=(), save_dir=Path(''), loggers=None):
     plt.close()
 
     # matplotlib labels
-    matplotlib.use('svg')  # faster
+    # matplotlib.use('svg')  # faster
     ax = plt.subplots(2, 2, figsize=(8, 8), tight_layout=True)[1].ravel()
     ax[0].hist(c, bins=np.linspace(0, nc, nc + 1) - 0.5, rwidth=0.8)
     ax[0].set_ylabel('instances')
@@ -292,6 +297,7 @@ def plot_labels(labels, names=(), save_dir=Path(''), loggers=None):
         ax[0].set_xticklabels(names, rotation=90, fontsize=10)
     else:
         ax[0].set_xlabel('classes')
+
     sns.histplot(x, x='x', y='y', ax=ax[2], bins=50, pmax=0.9)
     sns.histplot(x, x='width', y='height', ax=ax[3], bins=50, pmax=0.9)
 
@@ -309,7 +315,7 @@ def plot_labels(labels, names=(), save_dir=Path(''), loggers=None):
             ax[a].spines[s].set_visible(False)
 
     plt.savefig(save_dir / 'labels.jpg', dpi=200)
-    matplotlib.use('Agg')
+    # matplotlib.use('Agg')
     plt.close()
 
     # loggers
@@ -326,7 +332,7 @@ def plot_evolution(yaml_file='data/hyp.finetune.yaml'):  # from utils.plots impo
     f = fitness(x)
     # weights = (f - f.min()) ** 2  # for weighted results
     plt.figure(figsize=(10, 12), tight_layout=True)
-    matplotlib.rc('font', **{'size': 8})
+    # matplotlib.rc('font', **{'size': 8})
     for i, (k, v) in enumerate(hyp.items()):
         y = x[:, i + 7]
         # mu = (y * weights).sum() / weights.sum()  # best weighted result
@@ -431,8 +437,8 @@ def plot_results(start=0, stop=0, bucket='', id=(), labels=(), save_dir=''):
 
     ax[1].legend()
     fig.savefig(Path(save_dir) / 'results.png', dpi=200)
-    
-    
+
+
 def output_to_keypoint(output):
     # Convert model output to target format [batch_id, class_id, x, y, w, h, conf]
     targets = []

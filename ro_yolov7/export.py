@@ -3,18 +3,16 @@ import sys
 import time
 import warnings
 
-sys.path.append('./')  # to run '$ python *.py' files in subdirectories
-
 import torch
 import torch.nn as nn
 from torch.utils.mobile_optimizer import optimize_for_mobile
 
-import models
-from models.experimental import attempt_load, End2End
-from utils.activations import Hardswish, SiLU
-from utils.general import set_logging, check_img_size
-from utils.torch_utils import select_device
-from utils.add_nms import RegisterNMS
+from . import models
+from .models.experimental import attempt_load, End2End
+from .utils.activations import Hardswish, SiLU
+from .utils.general import check_img_size
+from .utils.torch_utils import select_device
+from .utils.add_nms import RegisterNMS
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -39,7 +37,6 @@ if __name__ == '__main__':
     opt.dynamic = opt.dynamic and not opt.end2end
     opt.dynamic = False if opt.dynamic_batch else opt.dynamic
     print(opt)
-    set_logging()
     t = time.time()
 
     # Load PyTorch model
@@ -101,7 +98,7 @@ if __name__ == '__main__':
         print('CoreML export success, saved as %s' % f)
     except Exception as e:
         print('CoreML export failure: %s' % e)
-                     
+
     # TorchScript-Lite export
     try:
         print('\nStarting TorchScript-Lite export with torch %s...' % torch.__version__)

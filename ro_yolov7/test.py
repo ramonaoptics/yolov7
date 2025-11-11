@@ -9,13 +9,13 @@ import torch
 import yaml
 from tqdm import tqdm
 
-from models.experimental import attempt_load
-from utils.datasets import create_dataloader
-from utils.general import coco80_to_coco91_class, check_dataset, check_file, check_img_size, check_requirements, \
-    box_iou, non_max_suppression, scale_coords, xyxy2xywh, xywh2xyxy, set_logging, increment_path, colorstr
-from utils.metrics import ap_per_class, ConfusionMatrix
-from utils.plots import plot_images, output_to_target, plot_study_txt
-from utils.torch_utils import select_device, time_synchronized, TracedModel
+from .models.experimental import attempt_load
+from .utils.datasets import create_dataloader
+from .utils.general import coco80_to_coco91_class, check_dataset, check_file, check_img_size, \
+    box_iou, non_max_suppression, scale_coords, xyxy2xywh, xywh2xyxy, increment_path, colorstr
+from .utils.metrics import ap_per_class, ConfusionMatrix
+from .utils.plots import plot_images, output_to_target, plot_study_txt
+from .utils.torch_utils import select_device, time_synchronized, TracedModel
 
 
 def test(data,
@@ -47,7 +47,6 @@ def test(data,
         device = next(model.parameters()).device  # get model device
 
     else:  # called directly
-        set_logging()
         device = select_device(opt.device, batch_size=batch_size)
 
         # Directories
@@ -58,7 +57,7 @@ def test(data,
         model = attempt_load(weights, map_location=device)  # load FP32 model
         gs = max(int(model.stride.max()), 32)  # grid size (max stride)
         imgsz = check_img_size(imgsz, s=gs)  # check img_size
-        
+
         if trace:
             model = TracedModel(model, device, imgsz)
 
@@ -92,7 +91,7 @@ def test(data,
 
     if v5_metric:
         print("Testing with YOLOv5 AP metric...")
-    
+
     seen = 0
     confusion_matrix = ConfusionMatrix(nc=nc)
     names = {k: v for k, v in enumerate(model.names if hasattr(model, 'names') else model.module.names)}
@@ -313,7 +312,6 @@ if __name__ == '__main__':
     opt.save_json |= opt.data.endswith('coco.yaml')
     opt.data = check_file(opt.data)  # check file
     print(opt)
-    #check_requirements()
 
     if opt.task in ('train', 'val', 'test'):  # run normally
         test(opt.data,
