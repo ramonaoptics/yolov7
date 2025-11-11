@@ -59,40 +59,6 @@ def check_online():
         return False
 
 
-def check_git_status():
-    # Recommend 'git pull' if code is out of date
-    print(colorstr("github: "), end="")
-    try:
-        assert Path(".git").exists(), "skipping check (not a git repository)"
-        assert not isdocker(), "skipping check (Docker image)"
-        assert check_online(), "skipping check (offline)"
-
-        cmd = "git fetch && git config --get remote.origin.url"
-        url = (
-            subprocess.check_output(cmd, shell=True).decode().strip().rstrip(".git")
-        )  # github repo url
-        branch = (
-            subprocess.check_output("git rev-parse --abbrev-ref HEAD", shell=True)
-            .decode()
-            .strip()
-        )  # checked out
-        n = int(
-            subprocess.check_output(
-                f"git rev-list {branch}..origin/master --count", shell=True
-            )
-        )  # commits behind
-        if n > 0:
-            s = (
-                f"⚠️ WARNING: code is out of date by {n} commit{'s' * (n > 1)}. "
-                f"Use 'git pull' to update or 'git clone {url}' to download latest."
-            )
-        else:
-            s = f"up to date with {url} ✅"
-        print(emojis(s))  # emoji-safe
-    except Exception as e:
-        print(e)
-
-
 def check_img_size(img_size, s=32):
     # Verify img_size is a multiple of stride s
     new_size = make_divisible(img_size, int(s))  # ceil gs-multiple
