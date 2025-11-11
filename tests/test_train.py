@@ -6,7 +6,6 @@ import cv2
 import yaml
 import argparse
 import subprocess
-import sys
 import pytest
 
 import ro_yolov7
@@ -67,14 +66,15 @@ def test_train_one_epoch(ml_dataset):
     data_yaml = dataset_dir / 'data.yaml'
     cfg_yaml = Path(ro_yolov7.__file__).parent / 'cfg' / 'training' / 'yolov7-tiny.yaml'
     hyp_yaml = Path(ro_yolov7.__file__).parent / 'data' / 'hyp.scratch.tiny.yaml'
+    default_weights_path = Path(ro_yolov7.__file__).parent / 'yolov7-tiny.pt'
 
     # Setup training options
     opt = argparse.Namespace(
-        weights='',  # Train from scratch
+        weights=str(default_weights_path),
         cfg=str(cfg_yaml),
         data=str(data_yaml),
         hyp=str(hyp_yaml),
-        epochs=1,  # Only 1 epoch for testing
+        epochs=1,
         batch_size=1,
         total_batch_size=1,
         img_size=[640, 640],
@@ -126,11 +126,11 @@ def test_training_from_subprocess(ml_dataset):
     cfg_path = Path(ro_yolov7.__file__).parent / 'cfg' / 'training' / 'yolov7-tiny.yaml'
     hyp_path = Path(ro_yolov7.__file__).parent / 'data' / 'hyp.scratch.tiny.yaml'
     train_script = Path(ro_yolov7.__file__).parent / 'train.py'
+    default_weights_path = Path(ro_yolov7.__file__).parent / 'yolov7-tiny.pt'
 
     cmd = [
-        'python',
-        str(train_script),
-        '--weights', '',
+        'python', str(train_script),
+        '--weights', str(default_weights_path),
         '--cfg', str(cfg_path),
         '--data', str(data_yaml),
         '--hyp', str(hyp_path),
