@@ -22,6 +22,10 @@ import torch.nn.functional as F
 from PIL import ExifTags, Image
 from torch.utils.data import Dataset
 from torchvision.ops import ps_roi_align, ps_roi_pool, roi_align, roi_pool
+import torchvision.transforms.v2 as v2
+from torchvision.transforms import InterpolationMode
+from torchvision.tv_tensors import Image as TvImage, Mask as TvMask
+
 
 # from pycocotools import mask as maskUtils
 from torchvision.utils import save_image
@@ -426,6 +430,19 @@ def img2label_paths(img_paths):
     ]
 
 
+def albumentations_is_available():
+    try:
+        import albumentations
+        _ = albumentations.__version__
+        return True
+    except:
+        warn(
+            "Albumentations is not available, skipping albumentations augmentations.",
+            stacklevel=2
+        )
+        return False
+
+
 class LoadImagesAndLabels(Dataset):  # for training/testing
     def __init__(
         self,
@@ -443,6 +460,16 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         prefix="",
     ):
         self.img_size = img_size
+        self.albumentations = (
+            Albumentations()
+            if augment and albumentations_is_available()
+            else None
+        )
+        self.pytorch_augments = (
+            PyTorchAugments()
+            if augment and not albumentations_is_available()
+            else None
+        )
         self.augment = augment
         self.hyp = hyp
         self.image_weights = image_weights
@@ -453,7 +480,6 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         self.mosaic_border = [-img_size // 2, -img_size // 2]
         self.stride = stride
         self.path = path
-        self.albumentations = Albumentations() if augment else None
         try:
             f = []  # image files
             for p in path if isinstance(path, list) else [path]:
@@ -745,7 +771,10 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     perspective=hyp["perspective"],
                 )
 
-            img, labels = self.albumentations(img, labels)
+            if self.albumentations is not None:
+                img, labels = self.albumentations(img, labels)
+            else:
+                img, labels = self.pytorch_augments(img, labels)
 
             # Augment colorspace
             # with rgb images we can augment the colorspace
@@ -1598,6 +1627,32 @@ class Albumentations:
                 np.array([[c, *b] for c, b in zip(new["class_labels"], new["bboxes"])]),
             )
         return im, labels
+
+
+class PyTorchAugments:
+    # Ramona PyTorch Augmentations class for image color/quality augmentations
+    def __init__(self):
+        self.transform = v2.Compose([
+            # John and Caleb agreed CLAHE is not helpful, it is a deterministic
+            # process and not useful for augmentation
+            v2.RandomApply([v2.GaussianBlur(kernel_size=3, sigma=(0.1, 2.0))], p=0.01),
+            v2.RandomApply([v2.ColorJitter(brightness=0.2, contrast=0.2)], p=0.01),
+            v2.RandomApply([
+                v2.Lambda(
+                    lambda x: x if isinstance(x, TvMask)
+                    else v2.functional.adjust_gamma(
+                        x, float(torch.empty(()).uniform_(0.7, 1.5))
+                    )
+                )
+            ], p=0.01)
+            # The albumentation augment for image compression was not considered useful
+            # as the data we work with is lossless anyways
+        ])
+
+    def __call__(self, image, labels):
+        image = self.transform(TvImage(image))
+        image = image[0].numpy()
+        return image, labels
 
 
 def create_folder(path="./new"):
