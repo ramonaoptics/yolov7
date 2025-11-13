@@ -76,7 +76,7 @@ def test_training_from_subprocess(ml_dataset):
         '--batch-size', '1',
         '--img-size', '640', '640',
         '--device', 'cpu',
-        '--workers', '0',
+        '--workers', '4',
         '--name', 'subprocess_test',
         '--project', str(dataset_dir / 'runs'),
     ]
