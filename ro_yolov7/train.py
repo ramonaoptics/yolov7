@@ -399,7 +399,8 @@ def train(hyp, opt, device, tb_writer=None):
         f"Logging results to {save_dir}\n"
         f"Starting training for {epochs} epochs..."
     )
-    torch.save(model, wdir / "init.pt")
+    # John - 20251115 - Don't save the initial weights checkpoint
+    # torch.save(model, wdir / "init.pt")
     for epoch in range(start_epoch, epochs):  # epoch -----------------------------------------
         # HACK - John - 20250421 - If there are a ton of labels, this can quickly
         # baloon GPU memory requirements. Garbage collect and clear cache during
@@ -658,7 +659,8 @@ def train(hyp, opt, device, tb_writer=None):
                 }
 
                 # Save last, best and delete
-                torch.save(ckpt, last)
+                # 20251115 - John - Dont save the last weights checkpoint, we only save the best
+                # torch.save(ckpt, last)
                 if best_fitness == fi:
                     torch.save(ckpt, best)
                 # John - we do not save checkpoints other than the "best" current model
